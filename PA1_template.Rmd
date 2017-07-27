@@ -1,25 +1,100 @@
 ---
-title: "Reproducible Research: Peer Assessment 1"
-output: 
-  html_document:
-    keep_md: true
+title: "Reproducible Research - Week 2"
+author: "Vladimir Orlyanchik"
+date: "July 26, 2017"
+output: html_document
 ---
 
+reading in the dataset
+```{r reading, echo=TRUE}
+library(ggplot2)
+library(gridExtra)
+Data<-read.csv("activity.csv")
+```
 
-## Loading and preprocessing the data
+Processing the data to be suitable for plotting and analysis - removing rowes with NA
+
+```{r processing, echo=TRUE }
+TotalStepsvsDate<-aggregate(steps~date, data=Data[complete.cases(Data),], sum)
+```
+
+Histogram of the total number of steps taken each day
+
+```{r histogram1, echo=TRUE}
+hist(TotalStepsvsDate$steps, breaks=15,xlab ="Total number of Steps")
+```
+
+Calculations of mean and median ignoring rows with NA
+
+```{r calculations, echo=TRUE}
+mean(TotalStepsvsDate$steps)
+
+median(TotalStepsvsDate$steps)
+
+```
+
+Preparing data showing number of steps averaged accross all days for each of 5-min intervals ignoring rows with NA
+
+```{r steps vs interval, echo=TRUE}
+TotalStepsvsInterval<-aggregate(steps~interval, data=Data[complete.cases(Data),], mean)
+```
+
+The time interval containing maximum average number of steps is:
+
+```{r maximum, echo=TRUE}
+which.max(TotalStepsvsInterval$steps)
+```
+
+Here is the plot of the Average Number of Steps as a function of 5-min time interval:
+
+```{r time series, echo=TRUE}
+plot(TotalStepsvsInterval$steps, type="l",xlab = "5-min Interval",ylab = "Average Number of Steps")
+```
 
 
+Calculation of total number of missing (NA) values:
 
-## What is mean total number of steps taken per day?
+```{r missing values, echo=TRUE}
+dim(Data)[[1]]-dim(Data[complete.cases(Data),])[[1]]
+```
 
+There are 2304 missing values. That is about 13% of total Data. Since each days contains 288 5-min intervals, there are total 8 days of missing data. One of the simplest ways to substitute the missing data is by using mean value of corresponding 5-min interval calculated ommiting rowes with missing values.
 
+```{r missing value substitution, echo=TRUE }
+NewData<-merge(Data,TotalStepsvsInterval,by = "interval",all = TRUE )
+bad<-is.na(NewData$steps.x)
+NewData$steps.x[bad]<-NewData$steps.y[bad]
+TotalStepsvsDateFull<-aggregate(steps.x~date, data=NewData, sum)
+```
 
-## What is the average daily activity pattern?
+The values of mean and median
 
+```{r new mean and median, echo=TRUE}
+mean(TotalStepsvsDateFull$steps.x)
+median(TotalStepsvsDateFull$steps.x)
+```
+of the modified data set are very close to what we calculated before
 
+The histogram for the new new data set looks very similar as well
 
-## Imputing missing values
+```{r histogram2, echo=TRUE}
+require(gridExtra)
+plot1<-qplot(TotalStepsvsDate$steps, main ="W/O missing data", xlab ="Total number of Steps")
+plot2<-qplot(TotalStepsvsDateFull$steps.x, main = "Missing data are imputed",xlab ="Total number of Steps")
+grid.arrange(plot1, plot2, nrow=2)
+```
 
+Calculation of difference in activity pattern between weekdays and weekends
 
+```{r weekday-weekend data prep , echo=TRUE}
+NewData$Weekday<-as.factor(ifelse(weekdays(as.Date(NewData$date)) %in% c("Monday", "Tuesday", "Wednesday", "Thursday", "Friday"), "weekday", "weekend"))
+day_activity<-aggregate(steps.x~interval+Weekday,data=NewData,mean)
+```
 
-## Are there differences in activity patterns between weekdays and weekends?
+Here is the plot of the Average Number of Steps as a function of 5-min time interval for weekdays and weekends:
+
+```{r weekday-weekend plot, echo=TRUE}
+qplot((seq_along(day_activity$steps.x)) %% 288,day_activity$steps.x,data=day_activity,geom="line", facets=Weekday~., xlab = "5-min Interval", ylab = "Average Number of Steps")
+```
+
+During the weekend an active period starts a little bit later in the day. More 
