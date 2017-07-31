@@ -20,7 +20,7 @@ TotalStepsvsDate<-aggregate(steps~date, data=Data[complete.cases(Data),], sum)
 
 Histogram of the total number of steps taken each day
 
-```{r histogram1, echo=TRUE}
+```{r histogram1, echo=TRUE,cache = TRUE}
 hist(TotalStepsvsDate$steps, breaks=15,xlab ="Total number of Steps")
 ```
 
@@ -47,7 +47,7 @@ which.max(TotalStepsvsInterval$steps)
 
 Here is the plot of the Average Number of Steps as a function of 5-min time interval:
 
-```{r time series, echo=TRUE}
+```{r time series, echo=TRUE,cache = TRUE}
 plot(TotalStepsvsInterval$steps, type="l",xlab = "5-min Interval",ylab = "Average Number of Steps")
 ```
 
@@ -60,7 +60,7 @@ dim(Data)[[1]]-dim(Data[complete.cases(Data),])[[1]]
 
 There are 2304 missing values. That is about 13% of total Data. Since each days contains 288 5-min intervals, there are total 8 days of missing data. One of the simplest ways to substitute the missing data is by using mean value of corresponding 5-min interval calculated ommiting rowes with missing values.
 
-```{r missing value substitution, echo=TRUE }
+```{r missing value substitution, echo=TRUE}
 NewData<-merge(Data,TotalStepsvsInterval,by = "interval",all = TRUE )
 bad<-is.na(NewData$steps.x)
 NewData$steps.x[bad]<-NewData$steps.y[bad]
@@ -77,7 +77,7 @@ of the modified data set are very close to what we calculated before
 
 The histogram for the new new data set looks very similar as well
 
-```{r histogram2, echo=TRUE}
+```{r histogram2, echo=TRUE,cache = TRUE}
 require(gridExtra)
 plot1<-qplot(TotalStepsvsDate$steps, main ="W/O missing data", xlab ="Total number of Steps")
 plot2<-qplot(TotalStepsvsDateFull$steps.x, main = "Missing data are imputed",xlab ="Total number of Steps")
@@ -93,7 +93,7 @@ day_activity<-aggregate(steps.x~interval+Weekday,data=NewData,mean)
 
 Here is the plot of the Average Number of Steps as a function of 5-min time interval for weekdays and weekends:
 
-```{r weekday-weekend plot, echo=TRUE}
+```{r weekday-weekend plot, echo=TRUE,cache = TRUE}
 qplot((seq_along(day_activity$steps.x)) %% 288,day_activity$steps.x,data=day_activity,geom="line", facets=Weekday~., xlab = "5-min Interval", ylab = "Average Number of Steps")
 ```
 
